@@ -49,3 +49,38 @@
     border-color: #0a58ca;
     border-radius: 0.5rem;
 }
+label {
+    text-align: center;
+}
+img {
+    padding-right: 10px;
+}
+#search {
+    margin-top: 10px;
+    border: 1px solid blue;
+}
+.submitbox {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+section article {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+@media screen and (max-width: 600px) {
+    .submitbox {
+        flex-direction: column;
+        align-items: center;
+    }
+    section article {
+        flex-direction: column;
+    }
+    span {
+        text-align: center;
+    }
+    .btn-primary {
+        width: 150px;
+    }
+}
