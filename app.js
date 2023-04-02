@@ -1,7 +1,7 @@
 async function fetchData(spec) {
     try {
         let country,
-            cat,
+            classificationName,
             page = 0,
             keyword,
             count;
@@ -70,9 +70,15 @@ async function fetchData(spec) {
         let form = select("form");
         let newS = makeElement("section");
         newS.setAttribute("id", "search");
+        let resultWord;
+        if (data.page.totalElements === 1) {
+            resultWord = "result";
+        } else {
+            resultWord = "results";
+        }
         let h2 = makeElement(
             "h2",
-            "Event " + data.page.totalElements + " results"
+            "Event " + data.page.totalElements + " " + resultWord
         );
         h2.setAttribute("id", "shead");
         let pages = makeElement("span", "Pages: ");
