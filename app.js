@@ -5,7 +5,6 @@ async function fetchData(spec) {
             page = 0,
             keyword,
             count;
-        console.log(Object.keys(spec).length);
         if (Object.keys(spec).length >= 3) {
             classificationName = spec.classificationName;
             if (spec.page) page = spec.page;
@@ -16,7 +15,6 @@ async function fetchData(spec) {
             classificationName = spec.target.classificationName.value;
             country = spec.target.country.value;
         }
-        console.log(spec.keyword);
         let parameters = {
             apikey: "Feg3lAzz6HBfFON8Wy4mWOMbuVnBVerw",
             countryCode: country,
@@ -49,6 +47,7 @@ async function fetchData(spec) {
         myurl = myurl + addon;
         response = await fetch(myurl);
         data = await response.json();
+
         let fSection = select("#search");
         if (fSection) {
             fSection.remove();
@@ -61,6 +60,13 @@ async function fetchData(spec) {
         if (fPages) {
             fPages.remove();
         }
+        let fError = select("#error");
+        if (fError) {
+            fError.remove();
+        }
+        if (data.page.totalElements === 0) {
+            throw "Sorry, there are no results for your search. Please try again.";
+        }
         let form = select("form");
         let newS = makeElement("section");
         newS.setAttribute("id", "search");
@@ -71,7 +77,6 @@ async function fetchData(spec) {
         h2.setAttribute("id", "shead");
         let pages = makeElement("span", "Pages: ");
         pages.setAttribute("id", "pages");
-        console.log(pages);
         let pagecount = data.page.totalPages;
         let pageLimit = 50;
         if (pagecount > pageLimit) {
@@ -114,8 +119,20 @@ async function fetchData(spec) {
             div.prepend(span);
             span.after(span2);
             span2.after(span3);
-            if (idx !== arr.length - 1) {
-                articles.setAttribute("style", "border-bottom: 1px solid red;");
+            if (data["_embedded"].events.length % 2 == 0) {
+                if (idx !== arr.length - 1 && idx !== arr.length - 2) {
+                    articles.setAttribute(
+                        "style",
+                        "border-bottom: 1px solid red;"
+                    );
+                }
+            } else {
+                if (idx !== arr.length - 1) {
+                    articles.setAttribute(
+                        "style",
+                        "border-bottom: 1px solid red;"
+                    );
+                }
             }
             newS.append(articles);
             image.forEach((element) => {
@@ -141,10 +158,6 @@ async function fetchData(spec) {
             let date = new Date(dateF);
             const option = { weekday: "long" };
             const hours = date.getHours();
-            console.log(
-                new Intl.DateTimeFormat("en-US", option).format(date),
-                hours
-            );
             div1 = makeElement("div");
             div1.setAttribute("style", "text-align: center;");
             const options = { month: "long" };
@@ -158,7 +171,10 @@ async function fetchData(spec) {
             div2.after(div3);
         });
     } catch (e) {
-        console.log(e);
+        let form = select("form");
+        let div = makeElement("div", e);
+        div.setAttribute("id", "error");
+        form.after(div);
     }
 }
 function makeElement(type, info = "") {
