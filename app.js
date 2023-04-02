@@ -3,55 +3,117 @@ async function fetchData(spec) {
         let country,
             cat,
             page = 0,
-            keywords,
+            keyword,
             count;
+        console.log(Object.keys(spec).length);
         if (Object.keys(spec).length >= 3) {
-            cat = spec.cat;
+            classificationName = spec.classificationName;
             if (spec.page) page = spec.page;
-            country = spec.country;
-            keywords = spec.keywords;
+            country = spec.countryCode;
+            keyword = spec.keyword;
         } else {
-            keywords = spec.target.keywords.value;
-            cat = spec.target.cat.value;
+            keyword = spec.target.keyword.value;
+            classificationName = spec.target.classificationName.value;
             country = spec.target.country.value;
         }
+        console.log(spec.keyword);
         let parameters = {
             apikey: "Feg3lAzz6HBfFON8Wy4mWOMbuVnBVerw",
             countryCode: country,
-            classificationName: cat,
-            keyword: keywords,
+            classificationName: classificationName,
+            keyword: keyword,
             page: page,
             sort: "date,name,asc",
         };
         let myurl = "https://app.ticketmaster.com/discovery/v2/events.josn?";
         count = 1;
+        let addon = "",
+            link = "";
         for (const property in parameters) {
-            myurl += property + "=" + parameters[property];
+            if (property === "page") {
+                addon += property + "=" + parameters[property];
+            } else {
+                link += property + "=" + parameters[property];
+                addon += property + "=" + parameters[property];
+            }
             if (count != Object.keys(parameters).length) {
-                myurl += "&";
+                if (property === "page") {
+                    addon += "&";
+                } else {
+                    link += "&";
+                    addon += "&";
+                }
             }
             count++;
         }
+        myurl = myurl + addon;
         response = await fetch(myurl);
         data = await response.json();
-
         let fSection = select("#search");
         if (fSection) {
             fSection.remove();
         }
+        let fHead = select("#shead");
+        if (fHead) {
+            fHead.remove();
+        }
+        let fPages = select("#pages");
+        if (fPages) {
+            fPages.remove();
+        }
         let form = select("form");
         let newS = makeElement("section");
         newS.setAttribute("id", "search");
-
-        form.after(newS);
+        let h2 = makeElement(
+            "h2",
+            "Event " + data.page.totalElements + " results"
+        );
+        h2.setAttribute("id", "shead");
+        let pages = makeElement("span", "Pages: ");
+        pages.setAttribute("id", "pages");
+        console.log(pages);
+        let pagecount = data.page.totalPages;
+        let pageLimit = 50;
+        if (pagecount > pageLimit) {
+            pagecount = pageLimit;
+        }
+        for (let i = 0; i < pagecount; i++) {
+            pages.innerHTML +=
+                "<a href='index2.html?" +
+                link +
+                "&page=" +
+                i +
+                "'>" +
+                (i + 1) +
+                "</a> ";
+        }
+        form.after(h2);
+        h2.after(pages);
+        pages.after(newS);
+        // Attractions: event["_embedded"].attractions
         data["_embedded"].events.forEach(function (event, idx, arr) {
             let image = event.images.filter((element) => {
                 return element.height === 115;
             });
-            let span = makeElement("span", event.name);
+            let venue = event["_embedded"].venues[0].name;
+            let cityState =
+                event["_embedded"].venues[0].city.name +
+                ", " +
+                event["_embedded"].venues[0].state.stateCode;
+
+            let strongE = makeElement("strong", event.name);
+            let span = makeElement("span");
+            let span2 = makeElement("span", venue);
+            let span3 = makeElement("span", cityState);
+            let div = makeElement("div");
+            div.setAttribute("id", "desc");
             span.setAttribute("style", "width: 250px");
             let articles = makeElement("article");
-            articles.append(span);
+            articles.append(div);
+            span.append(strongE);
+            div.prepend(span);
+            span.after(span2);
+            span2.after(span3);
             if (idx !== arr.length - 1) {
                 articles.setAttribute("style", "border-bottom: 1px solid red;");
             }
@@ -66,14 +128,23 @@ async function fetchData(spec) {
             let div1, div2, div3, dateF;
 
             if (event.dates.start.noSpecificTime) {
-                dateF = event.dates.start.localDate;
+                dateF =
+                    event.dates.timezone + " " + event.dates.start.localDate;
             } else {
                 dateF =
+                    event.dates.timezone +
+                    " " +
                     event.dates.start.localDate +
                     " " +
                     event.dates.start.localTime;
             }
             let date = new Date(dateF);
+            const option = { weekday: "long" };
+            const hours = date.getHours();
+            console.log(
+                new Intl.DateTimeFormat("en-US", option).format(date),
+                hours
+            );
             div1 = makeElement("div");
             div1.setAttribute("style", "text-align: center;");
             const options = { month: "long" };
@@ -98,7 +169,6 @@ function makeElement(type, info = "") {
 function select(area) {
     return document.querySelector(area);
 }
-function loadPages(event) {}
 
 function loadSearch() {
     var params = new URLSearchParams(window.location.search);
@@ -109,14 +179,21 @@ function loadSearch() {
     //console.log(vars);
     fetchData(vars);
 }
-const form = document.querySelector("form");
+const form = select("form");
 if (form) {
     form.addEventListener("submit", (event) => {
         event.preventDefault();
         fetchData(event);
-        loadPages(event);
     });
 }
+const sform = select("#sform");
+if (sform) {
+    sform.addEventListener("submit", (event) => {
+        event.preventDefault();
+        fetchData(event);
+    });
+}
+
 // const printAddress = () => {
 //     data.then((a) => {
 //       console.log(a);

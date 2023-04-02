@@ -68,6 +68,13 @@ section article {
     display: flex;
     align-items: center;
     gap: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}
+#desc {
+    display: grid;
+    gap: 20px;
 }
 @media screen and (max-width: 600px) {
     .submitbox {
